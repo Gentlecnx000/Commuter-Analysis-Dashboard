@@ -13,50 +13,27 @@ interface SidebarProps {
 }
 
 function SidebarLabel({ children }: { children: React.ReactNode }) {
-  return <label className="block text-xs font-medium text-[#a0a0b0] mb-1">{children}</label>;
+  return <label className="block text-xs font-medium text-[#6b7280] mb-1">{children}</label>;
 }
 
-function NumberInput({
-  value,
-  onChange,
-  step = 100,
-  min,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  step?: number;
-  min?: number;
-}) {
+function NumberInput({ value, onChange, step = 100 }: { value: number; onChange: (v: number) => void; step?: number }) {
   return (
     <input
       type="number"
       value={value}
       step={step}
-      min={min}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="w-full bg-[#1a1d2e] border border-[#2a2d3e] text-white rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#4fc3f7] transition-colors"
+      className="w-full bg-white border border-[#d1d5db] text-[#1a1f2e] rounded px-3 py-1.5 text-sm focus:outline-none focus:border-[#0284c7] transition-colors"
     />
   );
 }
 
-function RangeInput({
-  value,
-  onChange,
-  min,
-  max,
-  label,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  min: number;
-  max: number;
-  label?: string;
-}) {
+function RangeInput({ value, onChange, min, max, label }: { value: number; onChange: (v: number) => void; min: number; max: number; label?: string }) {
   return (
     <div>
-      <div className="flex justify-between text-xs text-[#a0a0b0] mb-1">
+      <div className="flex justify-between text-xs text-[#6b7280] mb-1">
         <span>{label}</span>
-        <span className="text-white font-medium">{value}</span>
+        <span className="text-[#1a1f2e] font-semibold">{value}</span>
       </div>
       <input
         type="range"
@@ -64,9 +41,9 @@ function RangeInput({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-[#ff6b6b] cursor-pointer"
+        className="w-full accent-[#dc2626] cursor-pointer"
       />
-      <div className="flex justify-between text-xs text-[#555] mt-0.5">
+      <div className="flex justify-between text-xs text-[#9ca3af] mt-0.5">
         <span>{min}</span>
         <span>{max}</span>
       </div>
@@ -77,7 +54,7 @@ function RangeInput({
 function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-[#6b7280] mb-3 px-4">
+      <h3 className="text-xs font-semibold uppercase tracking-widest text-[#9ca3af] mb-3 px-4">
         {title}
       </h3>
       <div className="px-4 space-y-3">{children}</div>
@@ -99,12 +76,12 @@ export function Sidebar(props: SidebarProps) {
   } = props;
 
   return (
-    <aside className="w-72 flex-shrink-0 bg-[#0d0f1a] border-r border-[#1e2133] overflow-y-auto">
+    <aside className="w-72 flex-shrink-0 bg-white border-r border-[#e0e4ed] overflow-y-auto shadow-sm">
       <div className="py-5">
         <div className="px-4 mb-5">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🚦</span>
-            <span className="text-sm font-bold text-white">Parameters</span>
+            <span className="text-sm font-bold text-[#1a1f2e]">Parameters</span>
           </div>
         </div>
 
@@ -120,20 +97,8 @@ export function Sidebar(props: SidebarProps) {
         </SidebarSection>
 
         <SidebarSection title="Work Intensity">
-          <RangeInput
-            value={workingDays}
-            onChange={setWorkingDays}
-            min={10}
-            max={25}
-            label="Working Days / Month"
-          />
-          <RangeInput
-            value={workingHours}
-            onChange={setWorkingHours}
-            min={4}
-            max={12}
-            label="Daily Working Hours"
-          />
+          <RangeInput value={workingDays} onChange={setWorkingDays} min={10} max={25} label="Working Days / Month" />
+          <RangeInput value={workingHours} onChange={setWorkingHours} min={4} max={12} label="Daily Working Hours" />
         </SidebarSection>
 
         <SidebarSection title="Geographic Arbitrage">
@@ -142,12 +107,10 @@ export function Sidebar(props: SidebarProps) {
             <select
               value={selectedRoute}
               onChange={(e) => setSelectedRoute(e.target.value)}
-              className="w-full bg-[#1a1d2e] border border-[#2a2d3e] text-white rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#4fc3f7] transition-colors"
+              className="w-full bg-white border border-[#d1d5db] text-[#1a1f2e] rounded px-3 py-1.5 text-xs focus:outline-none focus:border-[#0284c7] transition-colors"
             >
               {routeKeys.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
+                <option key={r} value={r}>{r}</option>
               ))}
             </select>
           </div>

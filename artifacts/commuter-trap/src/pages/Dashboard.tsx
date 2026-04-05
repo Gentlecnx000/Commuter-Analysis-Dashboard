@@ -41,7 +41,7 @@ export default function Dashboard() {
   }, [netIncome, rent, workingDays, workingHours, selectedRoute, carPrice, insurance, parking]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0f1117] text-[#fafafa]">
+    <div className="flex h-screen overflow-hidden bg-[#f4f6f9] text-[#1a1f2e]">
       <Sidebar
         netIncome={netIncome} setNetIncome={setNetIncome}
         rent={rent} setRent={setRent}
@@ -54,29 +54,29 @@ export default function Dashboard() {
         routeKeys={ROUTE_KEYS}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="px-6 pt-6 pb-4 border-b border-[#262730]">
-          <h1 className="text-2xl font-bold text-white mb-1">
+        <div className="px-6 pt-6 pb-4 border-b border-[#e0e4ed] bg-white">
+          <h1 className="text-2xl font-bold text-[#1a1f2e] mb-1">
             The Commuter Trap: Ultimate Sandbox
           </h1>
-          <p className="text-sm text-[#a0a0b0]">
+          <p className="text-sm text-[#6b7280]">
             A Dynamic Commute Affordability &amp; A/B Comparison Simulator. Driven by the{" "}
-            <span className="text-[#ff6b6b] font-medium">Spatial Impedance Matrix</span> and{" "}
-            <span className="text-[#4fc3f7] font-medium">PRESTO Fare Caps</span>, this dashboard
+            <span className="text-[#dc2626] font-medium">Spatial Impedance Matrix</span> and{" "}
+            <span className="text-[#0284c7] font-medium">PRESTO Fare Caps</span>, this dashboard
             evaluates the true utility drain of your geographic arbitrage strategy.
           </p>
-          <div className="mt-3 px-4 py-2 rounded-lg bg-[#1a1d2e] border border-[#2a2d3e] text-sm">
-            <span className="text-[#a0a0b0]">Global Baseline — Real Post-Tax Hourly Wage: </span>
-            <span className="font-bold text-[#4fc3f7]">
+          <div className="mt-3 px-4 py-2 rounded-lg bg-[#eff6ff] border border-[#bfdbfe] text-sm">
+            <span className="text-[#6b7280]">Global Baseline — Real Post-Tax Hourly Wage: </span>
+            <span className="font-bold text-[#0284c7]">
               ${metrics.realHourlyWage.toFixed(2)}/hr
             </span>
-            <span className="text-[#a0a0b0]">
+            <span className="text-[#6b7280]">
               {" "}· All parameters dynamically linked to your{" "}
             </span>
-            <span className="text-white font-medium">{workingDays}-day</span>
-            <span className="text-[#a0a0b0]"> work schedule.</span>
+            <span className="text-[#1a1f2e] font-medium">{workingDays}-day</span>
+            <span className="text-[#6b7280]"> work schedule.</span>
           </div>
         </div>
-        <div className="border-b border-[#262730] flex">
+        <div className="border-b border-[#e0e4ed] flex bg-white">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -84,8 +84,8 @@ export default function Dashboard() {
               className={cn(
                 "px-5 py-3 text-sm font-medium border-b-2 transition-colors",
                 activeTab === tab.id
-                  ? "border-[#ff6b6b] text-white"
-                  : "border-transparent text-[#a0a0b0] hover:text-white"
+                  ? "border-[#dc2626] text-[#1a1f2e]"
+                  : "border-transparent text-[#6b7280] hover:text-[#1a1f2e]"
               )}
             >
               {tab.id === "car" && "🚗 "}
@@ -97,12 +97,7 @@ export default function Dashboard() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {activeTab === "car" && (
-            <CarTab
-              metrics={metrics}
-              rent={rent}
-              insurance={insurance}
-              parking={parking}
-            />
+            <CarTab metrics={metrics} rent={rent} insurance={insurance} parking={parking} />
           )}
           {activeTab === "transit" && (
             <TransitTab
@@ -113,11 +108,7 @@ export default function Dashboard() {
             />
           )}
           {activeTab === "dilemma" && (
-            <DilemmaTab
-              metrics={metrics}
-              rent={rent}
-              selectedRoute={selectedRoute}
-            />
+            <DilemmaTab metrics={metrics} rent={rent} selectedRoute={selectedRoute} />
           )}
         </div>
       </div>
