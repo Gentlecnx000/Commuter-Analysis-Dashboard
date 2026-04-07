@@ -1,0 +1,238 @@
+import streamlit as st
+import pandas as pd
+
+# ================= Global Page Config =================
+st.set_page_config(page_title="The Commuter Trap Dashboard", layout="wide", initial_sidebar_state="expanded")
+
+st.title("🚦 The Commuter Trap: Ultimate Sandbox")
+st.markdown("""
+**A Dynamic Commute Affordability & A/B Comparison Simulator.** Driven by the **Spatial Impedance Matrix** and **PRESTO Fare Caps**, this dashboard evaluates the true utility drain of your geographic arbitrage strategy.
+""")
+
+# ================= The Ground-Truth Integrated Matrix =================
+ROUTE_MATRIX = {
+    "Inbound: Square One, Mississauga -> Union Station": {'dist': 26.0, 'c': 2.212, 'pt_am': 52.0, 'pt_pm': 50.0, 'pt_transfers': 1, 'pt_fare': 3.75, 'pt_mode': 'MiWay Bus + GO Train'},
+    "Inbound: Brampton GO -> Union Station": {'dist': 42.3, 'c': 1.803, 'pt_am': 35.0, 'pt_pm': 45.0, 'pt_transfers': 0, 'pt_fare': 8.67, 'pt_mode': 'Kitchener Line GO Train'},
+    "Inbound: Oakville GO -> Union Station": {'dist': 36.7, 'c': 1.737, 'pt_am': 34.0, 'pt_pm': 32.0, 'pt_transfers': 0, 'pt_fare': 8.16, 'pt_mode': 'Lakeshore West GO Train'},
+    "Inbound: Markham Civic Centre -> Union Station": {'dist': 30.5, 'c': 2.377, 'pt_am': 70.0, 'pt_pm': 70.0, 'pt_transfers': 1, 'pt_fare': 7.78, 'pt_mode': 'YRT Viva Bus + GO Train'},
+    "Inbound: Richmond Hill GO -> Union Station": {'dist': 35.8, 'c': 2.095, 'pt_am': 55.0, 'pt_pm': 51.0, 'pt_transfers': 0, 'pt_fare': 8.15, 'pt_mode': 'Richmond Hill GO Train'},
+    "Inbound: Vaughan Metro Centre -> Union Station": {'dist': 43.1, 'c': 1.392, 'pt_am': 44.0, 'pt_pm': 45.0, 'pt_transfers': 0, 'pt_fare': 3.3, 'pt_mode': 'TTC Subway Line 1'},
+    "Inbound: Scarborough Town Centre -> Union Station": {'dist': 25.3, 'c': 2.470, 'pt_am': 42.0, 'pt_pm': 42.0, 'pt_transfers': 1, 'pt_fare': 3.7, 'pt_mode': 'TTC Bus + GO Train'},
+    "Inbound: Pickering GO -> Union Station": {'dist': 41.3, 'c': 1.786, 'pt_am': 48.0, 'pt_pm': 45.0, 'pt_transfers': 0, 'pt_fare': 7.19, 'pt_mode': 'Lakeshore East GO Train'},
+    "Inbound: Oshawa (Ontario Tech) -> Union Station": {'dist': 69.7, 'c': 1.309, 'pt_am': 100.0, 'pt_pm': 100.0, 'pt_transfers': 1, 'pt_fare': 9.3, 'pt_mode': 'DRT Bus + GO Train'},
+    "Inbound: Univ. of Guelph -> Union Station": {'dist': 90.1, 'c': 1.110, 'pt_am': 103.0, 'pt_pm': 104.0, 'pt_transfers': 1, 'pt_fare': 13.59, 'pt_mode': 'GO Bus + GO Train'},
+    "Inbound: Univ. of Waterloo -> Union Station": {'dist': 117.0, 'c': 0.983, 'pt_am': 147.0, 'pt_pm': 146.0, 'pt_transfers': 2, 'pt_fare': 17.0, 'pt_mode': 'GO Train + GO Bus'},
+    "Inbound: McMaster Univ. -> Union Station": {'dist': 68.1, 'c': 1.340, 'pt_am': 97.0, 'pt_pm': 100.0, 'pt_transfers': 1, 'pt_fare': 10.05, 'pt_mode': 'GO Bus + GO Train'},
+    "Inbound: Barrie South GO -> Union Station": {'dist': 105.0, 'c': 1.143, 'pt_am': 98.0, 'pt_pm': 98.0, 'pt_transfers': 0, 'pt_fare': 12.83, 'pt_mode': 'Barrie Line GO Train'},
+    "Reverse: Scarborough Town Centre -> Univ. of Guelph": {'dist': 98.8, 'c': 1.063, 'pt_am': 147.0, 'pt_pm': 170.0, 'pt_transfers': 1, 'pt_fare': 12.45, 'pt_mode': 'GO Bus'},
+    "Reverse: Square One, Mississauga -> Univ. of Guelph": {'dist': 68.0, 'c': 0.809, 'pt_am': 72.0, 'pt_pm': 80.0, 'pt_transfers': 0, 'pt_fare': 10.73, 'pt_mode': 'GO Bus'},
+    "Reverse: Brampton GO -> Univ. of Waterloo": {'dist': 89.8, 'c': 0.947, 'pt_am': 118.0, 'pt_pm': 148.0, 'pt_transfers': 2, 'pt_fare': 15.58, 'pt_mode': 'Kitchener GO Train + GO Bus + GRT Bus'},
+    "Reverse: Markham Civic Centre -> Univ. of Waterloo": {'dist': 124.0, 'c': 0.776, 'pt_am': 186.0, 'pt_pm': 211.0, 'pt_transfers': 4, 'pt_fare': 18.02, 'pt_mode': 'YRT Viva Bus + GO Bus + GRT Bus'},
+    "Reverse: Vaughan Metro Centre -> Barrie South GO": {'dist': 68.3, 'c': 0.787, 'pt_am': 156.0, 'pt_pm': 80.0, 'pt_transfers': 2, 'pt_fare': 11.74, 'pt_mode': 'TTC Subway + GO Train'},
+    "Reverse: McMaster Univ. -> Square One, Mississauga": {'dist': 48.3, 'c': 1.009, 'pt_am': 76.0, 'pt_pm': 60.0, 'pt_transfers': 0, 'pt_fare': 9.89, 'pt_mode': 'GO Bus'},
+    "Reverse: Univ. of Guelph -> Square One, Mississauga": {'dist': 67.1, 'c': 0.913, 'pt_am': 100.0, 'pt_pm': 72.0, 'pt_transfers': 1, 'pt_fare': 10.73, 'pt_mode': 'GO Bus'},
+    "Reverse: Oshawa (Ontario Tech) -> Univ. of Waterloo": {'dist': 162.0, 'c': 0.741, 'pt_am': 187.0, 'pt_pm': 243.0, 'pt_transfers': 2, 'pt_fare': 25.52, 'pt_mode': 'GO Bus + GRT Bus'},
+    "Cross-Region: Markham Civic Centre -> Square One, Mississauga": {'dist': 50.0, 'c': 1.550, 'pt_am': 97.0, 'pt_pm': 94.0, 'pt_transfers': 1, 'pt_fare': 10.18, 'pt_mode': 'YRT Bus + GO Bus'},
+    "Cross-Region: Scarborough Town Centre -> Vaughan Metro Centre": {'dist': 32.4, 'c': 1.813, 'pt_am': 68.0, 'pt_pm': 70.0, 'pt_transfers': 1, 'pt_fare': 5.85, 'pt_mode': 'GO Bus + YRT Viva Bus'},
+    "Cross-Region: Brampton GO -> Markham Civic Centre": {'dist': 56.7, 'c': 1.587, 'pt_am': 103.0, 'pt_pm': 89.0, 'pt_transfers': 2, 'pt_fare': 11.87, 'pt_mode': 'GO Train/Bus + Local Bus'},
+    "Cross-Region: Richmond Hill GO -> Square One, Mississauga": {'dist': 45.7, 'c': 1.614, 'pt_am': 80.0, 'pt_pm': 98.0, 'pt_transfers': 1, 'pt_fare': 8.41, 'pt_mode': 'Richmond Hill GO Train + GO Bus'},
+    "Cross-Region: Oshawa (Ontario Tech) -> Markham Civic Centre": {'dist': 40.4, 'c': 1.516, 'pt_am': 70.0, 'pt_pm': 95.0, 'pt_transfers': 1, 'pt_fare': 8.79, 'pt_mode': 'GO Bus + YRT Bus'},
+    "Cross-Region: Oakville GO -> Vaughan Metro Centre": {'dist': 46.2, 'c': 1.515, 'pt_am': 87.0, 'pt_pm': 94.0, 'pt_transfers': 1, 'pt_fare': 10.31, 'pt_mode': 'GO Train + TTC Subway'},
+    "Cross-Region: Square One, Mississauga -> Vaughan Metro Centre": {'dist': 30.2, 'c': 1.531, 'pt_am': 56.0, 'pt_pm': 72.0, 'pt_transfers': 1, 'pt_fare': 10.45, 'pt_mode': 'GO Bus + TTC Subway'},
+    "Cross-Region: Pickering GO -> Brampton GO": {'dist': 67.1, 'c': 1.472, 'pt_am': 140.0, 'pt_pm': 140.0, 'pt_transfers': 1, 'pt_fare': 11.87, 'pt_mode': 'GO Bus + Brampton Transit Bus'},
+    "Cross-Region: Scarborough Town Centre -> Square One, Mississauga": {'dist': 43.8, 'c': 1.655, 'pt_am': 94.0, 'pt_pm': 101.0, 'pt_transfers': 1, 'pt_fare': 5.34, 'pt_mode': 'GO Bus + MiWay Bus'},
+    "Cross-Region: Vaughan Metro Centre -> Markham Civic Centre": {'dist': 17.9, 'c': 2.346, 'pt_am': 71.0, 'pt_pm': 60.0, 'pt_transfers': 0, 'pt_fare': 3.88, 'pt_mode': 'YRT Viva Bus'},
+    "Extreme: McMaster Univ. -> Univ. of Guelph": {'dist': 44.3, 'c': 1.213, 'pt_am': 75.0, 'pt_pm': 71.0, 'pt_transfers': 0, 'pt_fare': 11.19, 'pt_mode': 'GO Bus'},
+    "Extreme: Univ. of Waterloo -> McMaster Univ.": {'dist': 75.6, 'c': 0.959, 'pt_am': 134.0, 'pt_pm': 150.0, 'pt_transfers': 1, 'pt_fare': 14.09, 'pt_mode': 'GO Bus'},
+    "Extreme: Barrie South GO -> Univ. of Waterloo": {'dist': 178.0, 'c': 0.815, 'pt_am': 999.0, 'pt_pm': 235.0, 'pt_transfers': 3, 'pt_fare': 25.12, 'pt_mode': 'Barrie GO Train + GO Bus'},
+    "Extreme: Univ. of Guelph -> Univ. of Waterloo": {'dist': 31.1, 'c': 1.648, 'pt_am': 110.0, 'pt_pm': 92.0, 'pt_transfers': 1, 'pt_fare': 10.91, 'pt_mode': 'GO Bus + GRT Bus'}
+}
+
+# ================= 1. Global Inputs (Sidebar) =================
+st.sidebar.header("🌍 Global Parameters")
+net_income = st.sidebar.number_input("Monthly Net Income ($)", value=5027, step=100)
+rent = st.sidebar.number_input("Expected Monthly Rent ($)", value=1200, step=100)
+
+st.sidebar.header("💼 Work Intensity")
+working_days = st.sidebar.slider("Working Days / Month", min_value=10, max_value=25, value=20)
+working_hours = st.sidebar.slider("Daily Working Hours", min_value=4, max_value=12, value=8)
+
+st.sidebar.header("🗺️ Geographic Arbitrage")
+selected_route = st.sidebar.selectbox("Select your O-D Matrix Route:", list(ROUTE_MATRIX.keys()))
+
+st.sidebar.header("🚗 M-Engine Variables")
+car_price = st.sidebar.number_input("Used Car Purchase Price ($)", value=22000, step=1000)
+insurance_input = st.sidebar.number_input("Monthly Car Insurance ($)", value=830, step=10)
+parking_input = st.sidebar.number_input("Expected Monthly Parking Fee ($)", value=150, step=10) # <-- ADDED BLIND SPOT
+
+# ================= 2. Unified Core Logic Engine =================
+route_data = ROUTE_MATRIX[selected_route]
+dist = route_data['dist']
+c_factor = route_data['c']
+pt_am = route_data['pt_am']
+pt_pm = route_data['pt_pm']
+pt_transfers = route_data['pt_transfers']
+pt_fare = route_data['pt_fare']
+pt_mode = route_data['pt_mode']
+
+monthly_working_hours = working_days * working_hours
+real_hourly_wage = net_income / monthly_working_hours if monthly_working_hours > 0 else 0
+monthly_trips = working_days * 2  
+
+# --- M-Engine (Driving) ---
+drive_one_way_mins = dist * c_factor
+drive_monthly_km = dist * monthly_trips
+drive_monthly_hours = (drive_one_way_mins * monthly_trips) / 60
+
+depreciation = (car_price * 0.15918) / 12
+fuel_cost = (drive_monthly_km / 100) * 6.7 * 1.40
+maintenance_rate = 890 / (drive_monthly_km * 12) if drive_monthly_km > 0 else 0
+maintenance_cost = drive_monthly_km * maintenance_rate
+total_m_engine = depreciation + insurance_input + parking_input + fuel_cost + maintenance_cost # Added parking
+
+drive_time_tax = drive_monthly_hours * (real_hourly_wage * 0.5)
+drive_x_rate = (drive_monthly_hours * 0.5) / monthly_working_hours if monthly_working_hours > 0 else 0
+drive_guardrail = 0.45 + drive_x_rate
+drive_burden = (rent + total_m_engine + drive_time_tax) / net_income if net_income > 0 else 0
+
+# --- PT-Engine (Transit) ---
+monthly_transit_cost = 0
+for i in range(1, monthly_trips + 1):
+    if i <= 35:
+        monthly_transit_cost += pt_fare
+    elif i <= 40:
+        monthly_transit_cost += pt_fare * 0.14
+    else:
+        monthly_transit_cost += 0
+
+pt_system_failure = False
+if pt_am == 999.0 or pt_pm == 999.0:
+    pt_system_failure = True
+    transit_one_way_mins = 999
+    transit_monthly_hours = 999
+    transit_time_tax = 9999
+    transit_x_rate = 999
+else:
+    transit_one_way_mins = (pt_am + pt_pm) / 2
+    transit_monthly_hours = (transit_one_way_mins * monthly_trips) / 60
+    transit_time_tax = transit_monthly_hours * (real_hourly_wage * 0.5)
+    transit_x_rate = (transit_monthly_hours * 0.5) / monthly_working_hours if monthly_working_hours > 0 else 0
+
+transit_guardrail = 0.45 + transit_x_rate
+transit_burden = (rent + monthly_transit_cost + transit_time_tax) / net_income if net_income > 0 else 0
+
+friction_ui = "🟢 Seamless" if pt_transfers == 0 else "🟡 Moderate Friction" if pt_transfers == 1 else "🔴 Extreme Cognitive Load"
+quality_ui = "🟡 Dead Time (High Drain)" if "Bus" in pt_mode else "🟢 Productive Time"
+drive_quality_ui = "🔴 High-Stress Dead Time (100% Focus Required)"
+
+# ================= 3. Top Tabs UI Architecture =================
+st.info(f"💡 **Global Baseline:** Real Post-Tax Hourly Wage: **${real_hourly_wage:.2f}/hr**. All parameters dynamically linked to your {working_days}-day work schedule.")
+
+tab1, tab2, tab3 = st.tabs(["🚗 Option A: Car (M-Engine)", "🚌 Option B: Transit (PT-Engine)", "⚖️ The Ultimate Dilemma"])
+
+# --- TAB 1: CAR ---
+with tab1:
+    st.header("Car Ownership Analysis")
+    st.caption("Characterized by High Sunk Costs and Fixed Cash Drain.")
+    
+    col1_m, col2_m = st.columns([1, 2])
+    with col1_m:
+        st.markdown(f"**Physical Distance:** {dist} km")
+        st.markdown(f"**Est. One-Way Time:** {drive_one_way_mins:.0f} mins")
+        st.markdown(f"**Time Quality:** {drive_quality_ui}")
+        st.markdown("---")
+        st.metric("Total Monthly Cash Drain", f"${total_m_engine:,.0f}")
+        st.metric("Total Time Tax", f"${drive_time_tax:,.0f}")
+        
+    with col2_m:
+        st.markdown("### 🎯 Dynamic Guardrail: `" + f"{(drive_guardrail*100):.1f}%" + "`")
+        if drive_burden > drive_guardrail:
+            st.markdown(f"<h2 style='color: #FF4B4B;'>Burden: {drive_burden * 100:.1f}%</h2>", unsafe_allow_html=True)
+            st.error("🔴 **Financial Bankruptcy:** This route creates an unsustainable financial bleed when driving. Fixed costs like Insurance and Parking consume too much net income.")
+        else:
+            st.markdown(f"<h2 style='color: #00CC96;'>Burden: {drive_burden * 100:.1f}%</h2>", unsafe_allow_html=True)
+            st.success("🟢 **Sustainable.**")
+            
+    st.divider()
+    st.subheader("🔍 Cost Structure Breakdown (M-Engine)")
+    df_m_breakdown = pd.DataFrame({
+        "Cost Category": ["Rent", "Depreciation", "Insurance", "Parking", "Fuel", "Maintenance", "Time Tax"],
+        "Monthly Drain ($)": [rent, depreciation, insurance_input, parking_input, fuel_cost, maintenance_cost, drive_time_tax]
+    })
+    st.bar_chart(df_m_breakdown.set_index("Cost Category"), use_container_width=True)
+
+# --- TAB 2: TRANSIT ---
+with tab2:
+    st.header("Public Transit Analysis")
+    st.caption("Characterized by Artificial Price Caps and Systemic Friction.")
+    
+    if pt_system_failure:
+        st.error("🚨 **SYSTEMIC TRANSIT FAILURE:** This route is mathematically or physically impossible during the morning peak.")
+    else:
+        col1_pt, col2_pt = st.columns([1, 2])
+        with col1_pt:
+            st.markdown(f"**Primary Mode:** {pt_mode}")
+            st.markdown(f"**Est. One-Way Time:** {transit_one_way_mins:.0f} mins")
+            st.markdown(f"**Network Friction:** {pt_transfers} Transfers ({friction_ui})")
+            st.markdown(f"**Time Quality:** {quality_ui}")
+            st.markdown("---")
+            st.metric("PRESTO Cost (Capped)", f"${monthly_transit_cost:,.0f}")
+            st.metric("Total Time Tax", f"${transit_time_tax:,.0f}")
+            
+        with col2_pt:
+            st.markdown("### 🎯 Dynamic Guardrail: `" + f"{(transit_guardrail*100):.1f}%" + "`")
+            if transit_burden > transit_guardrail:
+                st.markdown(f"<h2 style='color: #FF4B4B;'>Burden: {transit_burden * 100:.1f}%</h2>", unsafe_allow_html=True)
+                st.error("🔴 **Temporal Bankruptcy:** The systemic friction of this route extracts too much of your utility via the Time Tax.")
+            else:
+                st.markdown(f"<h2 style='color: #00CC96;'>Burden: {transit_burden * 100:.1f}%</h2>", unsafe_allow_html=True)
+                st.success("🟢 **Sustainable.**")
+                
+        st.divider()
+        st.subheader("🔍 Cost Structure Breakdown (PT-Engine)")
+        df_pt_breakdown = pd.DataFrame({
+            "Cost Category": ["Rent", "PRESTO Fare", "Time Tax"],
+            "Monthly Drain ($)": [rent, monthly_transit_cost, transit_time_tax]
+        })
+        st.bar_chart(df_pt_breakdown.set_index("Cost Category"), use_container_width=True)
+
+# --- TAB 3: THE ULTIMATE DILEMMA ---
+with tab3:
+    st.header("A/B Utility Comparison")
+    
+    if pt_system_failure:
+        st.warning("⚠️ **Qualitative Override:** Transit is systematically unviable for this route. You are a **Captive Driver**, forced to absorb the financial burden of car ownership regardless of the mathematical output.")
+        df_chart = pd.DataFrame({
+            "Category": ["Rent", "Cash Drain", "Time Tax"],
+            "Drive ($)": [rent, total_m_engine, drive_time_tax]
+        })
+        st.bar_chart(df_chart.set_index("Category"), use_container_width=True)
+    else:
+        if "Extreme" in selected_route or "Reverse" in selected_route:
+            st.warning("⚠️ **Qualitative Override:** While mathematics may favor transit due to PRESTO caps, ground-truth data indicates severe **Schedule Delay Penalties (SDP)** for this non-traditional corridor. Low morning frequencies may practically force car ownership.")
+        
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("### 🚗 Option A: Drive")
+            st.markdown(f"**Burden Ratio:** `{drive_burden * 100:.1f}%`")
+            st.caption(f"Against dynamic guardrail of {(drive_guardrail*100):.1f}%")
+        with c2:
+            st.markdown("### 🚌 Option B: Transit")
+            st.markdown(f"**Burden Ratio:** `{transit_burden * 100:.1f}%`")
+            st.caption(f"Against dynamic guardrail of {(transit_guardrail*100):.1f}%")
+        
+        st.divider()
+        if drive_burden > drive_guardrail and transit_burden > transit_guardrail:
+            st.error("🚨 **THE NO-WIN DILEMMA:** Both options breach your sustainability guardrail. Driving bankrupts your wallet; Transit bankrupts your time. This geographic location is fundamentally unviable for your income and theoretical workload.")
+        elif drive_burden < transit_burden:
+            st.success("🏆 **Recommendation: Drive.** Despite the high sunk costs, the transit network is too inefficient. Driving preserves more of your total utility.")
+        else:
+            st.success("🏆 **Recommendation: Transit.** The PRESTO fare caps successfully protect your utility. Transit is the mathematically optimal choice.")
+
+        st.subheader("Cost Structure Visualizer")
+        df_chart = pd.DataFrame({
+            "Category": ["Rent", "Cash Drain", "Time Tax"],
+            "Drive ($)": [rent, total_m_engine, drive_time_tax],
+            "Transit ($)": [rent, monthly_transit_cost, transit_time_tax]
+        })
+        st.bar_chart(df_chart.set_index("Category"), use_container_width=True)
