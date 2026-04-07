@@ -1,6 +1,28 @@
 import streamlit as st
 import pandas as pd
-
+# 必须放在所有 st 命令的第一行！
+st.set_page_config(page_title="Commuter Trap Dashboard", layout="wide")
+# 注入自定义 CSS 来全局放大字体
+st.markdown("""
+    <style>
+    /* 调整全局基础字体大小 */
+    html, body, [class*="css"]  {
+        font-size: 18px !important;
+    }
+    /* 放大侧边栏字体 */
+    .sidebar .sidebar-content {
+        font-size: 18px;
+    }
+    /* 放大 Markdown 和普通文本 */
+    p, li {
+        font-size: 1.1rem !important;
+    }
+    /* 放大 st.metric 数据指标的数值 */
+    [data-testid="stMetricValue"] {
+        font-size: 2.5rem !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
 # ================= Global Page Config =================
 st.set_page_config(page_title="The Commuter Trap Dashboard", layout="wide", initial_sidebar_state="expanded")
 
