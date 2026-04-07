@@ -84,8 +84,8 @@ selected_route = st.sidebar.selectbox("Select your O-D Matrix Route:", list(ROUT
 
 st.sidebar.header("🚗 M-Engine Variables")
 car_price = st.sidebar.number_input("Used Car Purchase Price ($)", value=22000, step=1000)
-insurance_input = st.sidebar.number_input("Monthly Car Insurance ($)", value=830, step=10)
-parking_input = st.sidebar.number_input("Expected Monthly Parking Fee ($)", value=150, step=10) # <-- ADDED BLIND SPOT
+insurance_input = st.sidebar.number_input("Monthly Car Insurance ($)", value=400, step=10)
+parking_input = st.sidebar.number_input("Expected Monthly Parking Fee ($)", value=0, step=10) # <-- ADDED BLIND SPOT
 
 # ================= 2. Unified Core Logic Engine =================
 route_data = ROUTE_MATRIX[selected_route]
