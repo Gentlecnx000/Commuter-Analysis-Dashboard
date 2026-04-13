@@ -118,14 +118,21 @@ drive_guardrail = 0.45 + drive_x_rate
 drive_burden = (rent + total_m_engine + drive_time_tax) / net_income if net_income > 0 else 0
 
 # --- PT-Engine (Transit) ---
+# Reverse-engineer the Base Paper Fare (PRESTO fare already includes a 15.7% discount)
+base_paper_fare = pt_fare / (1 - 0.157) if pt_fare > 0 else 0
+
 monthly_transit_cost = 0
 for i in range(1, monthly_trips + 1):
     if i <= 35:
-        monthly_transit_cost += pt_fare
+        # Tier 1: 15.7% off (standard PRESTO)
+        monthly_transit_cost += base_paper_fare * (1 - 0.157)
     elif i <= 40:
-        monthly_transit_cost += pt_fare * 0.14
+        # Tier 2: 88.3% off (deep discount)
+        monthly_transit_cost += base_paper_fare * (1 - 0.883)
     else:
+        # Tier 3: free rides
         monthly_transit_cost += 0
+
 
 pt_system_failure = False
 if pt_am == 999.0 or pt_pm == 999.0:
